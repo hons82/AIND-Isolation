@@ -20,7 +20,7 @@ class IsolationTest(unittest.TestCase):
         self.player2 = game_agent.MinimaxPlayer()
         self.game = isolation.Board(self.player1, self.player2)
 
-    def play(self):
+    def testPlay(self):
         print("starting game")
         self.game.play()
         self.assertEqual(True, True)

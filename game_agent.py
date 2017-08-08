@@ -34,9 +34,16 @@ def custom_score(game, player):
     float
         The heuristic value of the current game state to the specified player.
     """
-    # TODO: finish this function!
-    raise NotImplementedError
+    if game.is_winner(player):
+        return float("inf")
 
+    if game.is_loser(player):
+        return float("-inf")
+
+    player_moves = float(len(game.get_legal_moves(player)))
+    player_opoppone_moves = float(len(game.get_legal_moves(game.get_opponent(player))))
+
+    return player_moves - player_opoppone_moves
 
 def custom_score_2(game, player):
     """Calculate the heuristic value of a game state from the point of view
@@ -251,7 +258,7 @@ class MinimaxPlayer(IsolationPlayer):
 
         for move in game.get_legal_moves():
             score = self.minscore(game.forecast_move(move), depth - 1)
-            if  best_score <= score:
+            if  max(best_score, score) == score:
                 best_score = score
                 best_move = move
 
@@ -296,8 +303,65 @@ class AlphaBetaPlayer(IsolationPlayer):
         """
         self.time_left = time_left
 
-        # TODO: finish this function!
-        raise NotImplementedError
+        best_move = (-1, -1)
+        depth = 1
+
+        if len(game.get_legal_moves(self)) == 0:
+            return best_move
+
+        # If I'm the first, position me at the center
+        if game.move_count == 0:
+            return (game.width // 2, game.height // 2)
+
+        while True:
+            try:
+                # The try/except block will automatically catch the exception raised when the timer is about to expire.
+                best_move = self.alphabeta(game, depth)
+                depth += 1
+            except SearchTimeout:
+                break  # Handle any actions required after timeout as needed
+
+        return best_move
+
+    def minscore(self, game, depth, alpha, beta):
+        if self.time_left() < self.TIMER_THRESHOLD:
+            raise SearchTimeout()
+
+        if depth == 0:
+            return self.score(game, self)
+
+        cur_min = float('inf')
+
+        if len(game.get_legal_moves(self)) == 0:
+            return cur_min
+
+        for move in game.get_legal_moves():
+            cur_min = min(cur_min, self.maxscore(game.forecast_move(move), depth - 1, alpha = alpha, beta = beta))
+            if cur_min <= alpha:
+                return cur_min
+            beta = min(beta, cur_min)
+
+        return cur_min
+
+    def maxscore(self, game, depth, alpha, beta):
+        if self.time_left() < self.TIMER_THRESHOLD:
+            raise SearchTimeout()
+
+        if depth == 0:
+            return self.score(game, self)
+
+        cur_max = float('-inf')
+
+        if len(game.get_legal_moves(self)) == 0:
+            return cur_max
+
+        for move in game.get_legal_moves():
+            cur_max = max(cur_max, self.minscore(game.forecast_move(move), depth - 1, alpha = alpha, beta = beta))
+            if cur_max >= beta:
+                return cur_max
+            alpha = max(alpha, cur_max)
+
+        return cur_max
 
     def alphabeta(self, game, depth, alpha=float("-inf"), beta=float("inf")):
         """Implement depth-limited minimax search with alpha-beta pruning as
@@ -347,5 +411,25 @@ class AlphaBetaPlayer(IsolationPlayer):
         if self.time_left() < self.TIMER_THRESHOLD:
             raise SearchTimeout()
 
-        # TODO: finish this function!
-        raise NotImplementedError
+        best_move = (-1, -1)
+        best_score = float('-inf')
+
+        if depth == 0:
+            return game.get_player_location(self)
+
+        if len(game.get_legal_moves(self)) == 0:
+            return best_move
+
+        cur_score = best_score
+        for move in game.get_legal_moves():
+            cur_score = self.minscore(game.forecast_move(move), depth - 1, alpha, beta)
+            alpha = max(alpha, cur_score)
+
+            if cur_score > best_score:
+                best_score = cur_score
+                best_move = move
+
+            if cur_score >= beta:
+                return best_move
+
+        return best_move
