@@ -50,7 +50,7 @@ def custom_score(game, player):
     player_moves = float(len(game.get_legal_moves(player)))
     player_opponent_moves = float(len(game.get_legal_moves(game.get_opponent(player))))
 
-    return (player_moves - player_opponent_moves) + (math.sqrt((game.width)**2 + (game.height)**2) - dist_center(game, game.get_player_location(player))) + (dist_center(game, game.get_player_location(game.get_opponent(player))))
+    return (math.sqrt((game.width)**2 + (game.height)**2) - dist_center(game, game.get_player_location(player))) + (dist_center(game, game.get_player_location(game.get_opponent(player))))
 
 
 def custom_score_2(game, player):
@@ -84,7 +84,7 @@ def custom_score_2(game, player):
     player_moves = float(len(game.get_legal_moves(player)))
     player_opponent_moves = float(len(game.get_legal_moves(game.get_opponent(player))))
 
-    return (player_moves - player_opponent_moves) + sum(dist_center(game, m) for m in game.get_legal_moves(player))
+    return player_moves**1.5 - player_opponent_moves**4
 
 
 def custom_score_3(game, player):
@@ -118,7 +118,7 @@ def custom_score_3(game, player):
     player_moves = float(len(game.get_legal_moves(player)))
     player_opponent_moves = float(len(game.get_legal_moves(game.get_opponent(player))))
 
-    return player_moves - player_opponent_moves
+    return player_moves**4 - player_opponent_moves**1.5
 
 
 class IsolationPlayer:
@@ -282,7 +282,7 @@ class MinimaxPlayer(IsolationPlayer):
 
         for move in game.get_legal_moves():
             score = self.minscore(game.forecast_move(move), depth - 1)
-            if  max(best_score, score) == score:
+            if best_move == (-1, -1) or score > best_score:
                 best_score = score
                 best_move = move
 
@@ -345,6 +345,7 @@ class AlphaBetaPlayer(IsolationPlayer):
             except SearchTimeout:
                 break  # Handle any actions required after timeout as needed
 
+        print(f"///{best_move} {depth}")
         return best_move
 
     def minscore(self, game, depth, alpha, beta):
@@ -449,7 +450,7 @@ class AlphaBetaPlayer(IsolationPlayer):
             cur_score = self.minscore(game.forecast_move(move), depth - 1, alpha, beta)
             alpha = max(alpha, cur_score)
 
-            if cur_score >= best_score:
+            if best_move == (-1, -1) or cur_score > best_score:
                 best_score = cur_score
                 best_move = move
 
