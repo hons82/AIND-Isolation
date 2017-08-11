@@ -449,7 +449,7 @@ class AlphaBetaPlayer(IsolationPlayer):
             cur_score = self.minscore(game.forecast_move(move), depth - 1, alpha, beta)
             alpha = max(alpha, cur_score)
 
-            if cur_score > best_score:
+            if cur_score >= best_score:
                 best_score = cur_score
                 best_move = move
 
