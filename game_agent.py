@@ -3,12 +3,19 @@ test your agent's strength against a set of known agents using tournament.py
 and include the results in your report.
 """
 import random
-
+import math
 
 class SearchTimeout(Exception):
     """Subclass base exception for code clarity. """
     pass
 
+def dist_center(game, move):
+    x, y = move
+    cx, cy = (math.ceil(game.width / 2), math.ceil(game.height / 2))
+    return math.sqrt((cx - x)**2 + (cy - y)**2)
+
+def common_moves(game, player):
+    return float(len(set(game.get_legal_moves()) & set(game.get_legal_moves(game.get_opponent(player)))))
 
 def custom_score(game, player):
     """Calculate the heuristic value of a game state from the point of view
@@ -41,9 +48,10 @@ def custom_score(game, player):
         return float("-inf")
 
     player_moves = float(len(game.get_legal_moves(player)))
-    player_opoppone_moves = float(len(game.get_legal_moves(game.get_opponent(player))))
+    player_opponent_moves = float(len(game.get_legal_moves(game.get_opponent(player))))
 
-    return player_moves - player_opoppone_moves
+    return (player_moves - player_opponent_moves) + (math.sqrt((game.width)**2 + (game.height)**2) - dist_center(game, game.get_player_location(player))) + (dist_center(game, game.get_player_location(game.get_opponent(player))))
+
 
 def custom_score_2(game, player):
     """Calculate the heuristic value of a game state from the point of view
@@ -67,8 +75,16 @@ def custom_score_2(game, player):
     float
         The heuristic value of the current game state to the specified player.
     """
-    # TODO: finish this function!
-    raise NotImplementedError
+    if game.is_winner(player):
+        return float("inf")
+
+    if game.is_loser(player):
+        return float("-inf")
+
+    player_moves = float(len(game.get_legal_moves(player)))
+    player_opponent_moves = float(len(game.get_legal_moves(game.get_opponent(player))))
+
+    return (player_moves - player_opponent_moves) + sum(dist_center(game, m) for m in game.get_legal_moves(player))
 
 
 def custom_score_3(game, player):
@@ -93,8 +109,16 @@ def custom_score_3(game, player):
     float
         The heuristic value of the current game state to the specified player.
     """
-    # TODO: finish this function!
-    raise NotImplementedError
+    if game.is_winner(player):
+        return float("inf")
+
+    if game.is_loser(player):
+        return float("-inf")
+
+    player_moves = float(len(game.get_legal_moves(player)))
+    player_opponent_moves = float(len(game.get_legal_moves(game.get_opponent(player))))
+
+    return player_moves - player_opponent_moves
 
 
 class IsolationPlayer:
@@ -185,7 +209,7 @@ class MinimaxPlayer(IsolationPlayer):
         if depth == 0:
             return self.score(game, self)
 
-        if len(game.get_legal_moves(self)) == 0:
+        if len(game.get_legal_moves()) == 0:
             return float('inf')
 
         return min([self.maxscore(game.forecast_move(move), depth - 1)
@@ -199,7 +223,7 @@ class MinimaxPlayer(IsolationPlayer):
         if depth == 0:
             return self.score(game, self)
 
-        if len(game.get_legal_moves(self)) == 0:
+        if len(game.get_legal_moves()) == 0:
             return float('-inf')
 
         return max([self.minscore(game.forecast_move(move), depth - 1)
@@ -253,7 +277,7 @@ class MinimaxPlayer(IsolationPlayer):
         if depth == 0:
             return game.get_player_location(self)
 
-        if len(game.get_legal_moves(self)) == 0:
+        if len(game.get_legal_moves()) == 0:
             return best_move
 
         for move in game.get_legal_moves():
@@ -306,7 +330,7 @@ class AlphaBetaPlayer(IsolationPlayer):
         best_move = (-1, -1)
         depth = 1
 
-        if len(game.get_legal_moves(self)) == 0:
+        if len(game.get_legal_moves()) == 0:
             return best_move
 
         # If I'm the first, position me at the center
@@ -332,7 +356,7 @@ class AlphaBetaPlayer(IsolationPlayer):
 
         cur_min = float('inf')
 
-        if len(game.get_legal_moves(self)) == 0:
+        if len(game.get_legal_moves()) == 0:
             return cur_min
 
         for move in game.get_legal_moves():
@@ -352,7 +376,7 @@ class AlphaBetaPlayer(IsolationPlayer):
 
         cur_max = float('-inf')
 
-        if len(game.get_legal_moves(self)) == 0:
+        if len(game.get_legal_moves()) == 0:
             return cur_max
 
         for move in game.get_legal_moves():
@@ -417,7 +441,7 @@ class AlphaBetaPlayer(IsolationPlayer):
         if depth == 0:
             return game.get_player_location(self)
 
-        if len(game.get_legal_moves(self)) == 0:
+        if len(game.get_legal_moves()) == 0:
             return best_move
 
         cur_score = best_score
